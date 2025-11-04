@@ -122,3 +122,108 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("load", () => {
   document.body.style.opacity = "1";
 });
+// ==== Dilekçe Şablonu (MVP) ====
+
+// API kökü (sende zaten global bir API değişkeni varsa onu kullanır)
+const API_BASE = window.API || "https://yarginet-mvp-api.onrender.com";
+
+const tplSelect = document.getElementById("tplSelect");
+const tplFields = document.getElementById("tplFields");
+const tplPreview = document.getElementById("tplPreview");
+
+async function loadTpls(){
+  try{
+    const r = await fetch(${API_BASE}/templates);
+    const items = await r.json();
+    // select'i doldur
+    tplSelect.innerHTML = items.map(t => 
+      `<option value="${t.code}" data-vars='${JSON.stringify(t.variables)}'>
+        ${t.title}
+      </option>`
+    ).join("");
+    buildTplFields();  // ilk seçili şablon için alanlar
+  }catch(e){
+    console.error(e);
+    if (typeof toast === 'function') toast("Şablonlar yüklenemedi ❌","error");
+  }
+}
+
+function buildTplFields(){
+  tplFields.innerHTML = "";
+  const opt = tplSelect.options[tplSelect.selectedIndex];
+  if(!opt){ return; }
+  const vars = JSON.parse(opt.dataset.vars || "[]");
+
+  if(vars.length === 0){
+    tplFields.innerHTML = <div class="out">Bu şablon değişken gerektirmiyor.</div>;
+    return;
+  }
+
+  // Alanları üret
+  vars.forEach(v=>{
+    tplFields.insertAdjacentHTML("beforeend", `
+      <label for="fld_${v}">${v}</label>
+      <input id="fld_${v}" placeholder="${v} değeri" />
+    `);
+  });
+}
+
+tplSelect?.addEventListener("change", buildTplFields);
+
+// Önizleme
+document.getElementById("btnPreview")?.addEventListener("click", async ()=>{
+  try{
+    const code = tplSelect.value;
+    const data = collectTplData();
+    const r = await fetch(${API_BASE}/templates/render, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ code, data })
+    });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    tplPreview.textContent = j.html || "";
+    if (typeof toast === 'function') toast("Önizleme hazır ✅","success");
+  }catch(e){
+    console.error(e);
+    if (typeof toast === 'function') toast("Önizleme başarısız ❌","error");
+  }
+});
+
+// DOCX indir
+document.getElementById("btnDocx")?.addEventListener("click", async ()=>{
+  try{
+    const code = tplSelect.value;
+    const data = collectTplData();
+    const r = await fetch(${API_BASE}/templates/docx, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ code, data })
+    });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = ${code}.docx;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    if (typeof toast === 'function') toast("DOCX indirildi ✅","success");
+  }catch(e){
+    console.error(e);
+    if (typeof toast === 'function') toast("DOCX oluşturulamadı ❌","error");
+  }
+});
+
+function collectTplData(){
+  const opt = tplSelect.options[tplSelect.selectedIndex];
+  const vars = JSON.parse(opt.dataset.vars || "[]");
+  const obj = {};
+  vars.forEach(v=>{
+    const el = document.getElementById(fld_${v});
+    obj[v] = (el?.value || "").trim();
+  });
+  return obj;
+}
+
+// Başlangıçta yükle
+loadTpls();
