@@ -1,11 +1,19 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, JSONResponse
+
 from sqlmodel import Session, select
 from typing import List
+import re
+from io import BytesIO
+
+from jinja2 import Template as JinjaTemplate
+from docx import Document
+from pydantic import BaseModel
+
 from models import User, Tevkil, Template, Hearing
-from schemas import UserIn, UserOut, LoginIn, TevkilIn, TevkilOut, HearingIn, HearingOut, TemplateOut, RenderIn
+from schemas import UserIn, UserOut, LoginIn, TevkilIn, TevkilOut, HearingIn
 from db import engine, init_db
-from datetime import datetime
 
 app = FastAPI(title="YargıNet MVP API", version="0.1.0")
 
