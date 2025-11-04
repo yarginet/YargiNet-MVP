@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YargıNet MVP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <h1>YargıNet MVP</h1>
+  <p>Tevkil • Dilekçe • Takvim</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Giriş / Kayıt</h2>
+    <form id="reg">
+      <input name="email" placeholder="email" required />
+      <input name="password" placeholder="şifre" required />
+      <button>Kayıt</button>
+    </form>
+    <form id="login">
+      <input name="email" placeholder="email" required />
+      <input name="password" placeholder="şifre" required />
+      <button>Giriş</button>
+    </form>
+    <pre id="authOut" class="out"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Tevkil İlanı</h2>
+    <form id="tevkilForm">
+      <input name="title" placeholder="Başlık" required />
+      <input name="city" placeholder="Şehir (Rize/İst.)" required />
+      <input name="court" placeholder="Mahkeme türü" required />
+      <input name="fee" type="number" placeholder="Ücret" required />
+      <textarea name="details" placeholder="Detay"></textarea>
+      <button>Ekle</button>
+    </form>
+    <button id="listTevkil">İlanları Listele</button>
+    <pre id="tevkilOut" class="out"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Dilekçe Şablonu</h2>
+    <button id="listTpl">Şablonları Getir</button>
+    <select id="tplSelect"></select>
+    <textarea id="fields" placeholder='Alanlar (JSON): {"mukekkil":"..."}'></textarea>
+    <button id="renderBtn">Oluştur</button>
+    <pre id="renderOut" class="out"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Duruşma Takvimi</h2>
+    <form id="hearForm">
+      <input name="court" placeholder="Mahkeme" required />
+      <input name="date" type="datetime-local" required />
+      <input name="room" placeholder="Salon" />
+      <input name="note" placeholder="Not" />
+      <button>Ekle</button>
+    </form>
+    <button id="listHear">Duruşmaları Listele</button>
+    <pre id="hearOut" class="out"></pre>
+  </section>
+</main>
+
+<footer>
+  <small>© 2025 YargıNet – MVP Demo</small>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
