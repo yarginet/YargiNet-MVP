@@ -118,3 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   tick();
 });
+// Sayfa açıldığında pürüzsüz kayma efekti
+window.addEventListener("load", () => {
+  document.body.style.opacity = "1";
+});
