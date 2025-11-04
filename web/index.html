@@ -50,11 +50,21 @@
 
   <section class="card">
     <h2>Dilekçe Şablonu</h2>
-    <button id="listTpl">Şablonları Getir</button>
-    <select id="tplSelect"></select>
-    <textarea id="fields" placeholder='Alanlar (JSON): {"mukekkil":"..."}'></textarea>
-    <button id="renderBtn">Oluştur</button>
-    <pre id="renderOut" class="out"></pre>
+   <section class="card">
+  <h2>Dilekçe Şablonu</h2>
+
+  <label for="tplSelect">Şablon</label>
+  <select id="tplSelect"></select>
+
+  <div id="tplFields" class="grid2" style="margin-top:8px;"></div>
+
+  <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+    <button id="btnPreview">Önizleme</button>
+    <button id="btnDocx">DOCX indir</button>
+  </div>
+
+  <div id="tplPreview" class="out" style="margin-top:12px; min-height:120px;"></div>
+</section>
   </section>
 
   <section class="card">
