@@ -26,7 +26,15 @@ app.add_middleware(
 )
 
 init_db()
+# ---- Şablon değişkenlerini çıkar ({{degisken}}) ----
+VAR_RE = re.compile(r"{{\s*([a-zA-Z0-9_]+)\s*}}")
 
+def extract_vars(text: str):
+    return sorted(set(VAR_RE.findall(text or "")))
+
+class RenderIn(BaseModel):
+    code: str
+    data: dict  # {"mukekkil": "...", "borclu": "..."}
 def get_s():
     with Session(engine) as s:
         yield s
@@ -87,12 +95,50 @@ def list_templates(s: Session = Depends(get_s)):
     rows = s.exec(select(Template)).all()
     return [TemplateOut(id=r.id, code=r.code, title=r.title) for r in rows]
 
-@app.post("/dilekce/render", tags=["dilekce"])
-def render_template(payload: RenderIn, s: Session = Depends(get_s)):
-    tpl = s.get(Template, payload.template_id)
-    if not tpl:
-        raise HTTPException(404, "Şablon bulunamadı")
-    text = tpl.body
-    for k, v in payload.fields.items():
-        text = text.replace("{{"+k+"}}", str(v))
-    return {"title": tpl.title, "content": text}
+# 1) Şablonları listele + ihtiyaç duyduğu alanları döndür
+@app.get("/templates")
+def list_templates():
+    with Session(engine) as s:
+        rows = s.exec(select(Template)).all()
+    return [
+        {"code": r.code, "title": r.title, "variables": extract_vars(r.body)}
+        for r in rows
+    ]
+
+
+# 2) Önizleme: metni doldurup düz HTML/metin döndür
+@app.post("/templates/render")
+def render_template(payload: RenderIn):
+    with Session(engine) as s:
+        t = s.exec(select(Template).where(Template.code == payload.code)).first()
+        if not t:
+            raise HTTPException(status_code=404, detail="Şablon bulunamadı")
+
+    html = JinjaTemplate(t.body or "").render(**payload.data)
+    return {"html": html}
+
+
+# 3) DOCX oluşturup indir
+@app.post("/templates/docx")
+def render_docx(payload: RenderIn):
+    with Session(engine) as s:
+        t = s.exec(select(Template).where(Template.code == payload.code)).first()
+        if not t:
+            raise HTTPException(status_code=404, detail="Şablon bulunamadı")
+
+    filled = JinjaTemplate(t.body or "").render(**payload.data)
+
+    doc = Document()
+    for line in filled.split("\n"):
+        doc.add_paragraph(line)
+
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+
+    filename = f"{payload.code}.docx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
