@@ -142,3 +142,27 @@ body {
     width:520px; height:520px; filter: blur(80px); opacity:.22;
   }
 }
+/* Dilekçe alanları 2 sütun */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+.grid2 label { grid-column: span 2; font-size: 12px; color: #94a3b8; }
+.grid2 input, .grid2 textarea { grid-column: span 2; }
+
+@media (min-width: 860px){
+  .grid2 label { grid-column: span 2; }
+  .grid2 input, .grid2 textarea { grid-column: span 1; }
+}
+
+/* Önizleme kutusu */
+.out {
+  background: rgba(15,23,42,.55);
+  border: 1px solid rgba(148,163,184,.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
