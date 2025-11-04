@@ -87,3 +87,34 @@ listHear.onclick = async () => {
   const data = await r.json();
   hearOut.textContent = JSON.stringify(data, null, 2);
 };
+// ==== YargıNet typing animasyonu ====
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("typeTarget");
+  if(!el) return;
+
+  const lines = [
+    "Yargının Akıllı Yüzü",
+    "Tevkil • Dilekçe • Takvim",
+    "Hızlı • Basit • Güvenli"
+  ];
+
+  let i = 0, pos = 0, dir = 1; // dir: 1 yaz, -1 sil
+  const typeSpeed = 55, eraseSpeed = 28, hold = 1200;
+
+  function tick(){
+    const text = lines[i];
+    pos += dir;
+    el.textContent = text.slice(0, pos);
+
+    if (dir === 1 && pos === text.length){
+      setTimeout(()=>{ dir = -1; tick(); }, hold);
+    } else if (dir === -1 && pos === 0){
+      i = (i + 1) % lines.length;
+      dir = 1;
+      setTimeout(tick, 250);
+    } else {
+      setTimeout(tick, dir === 1 ? typeSpeed : eraseSpeed);
+    }
+  }
+  tick();
+});
