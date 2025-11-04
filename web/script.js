@@ -226,4 +226,104 @@ function collectTplData(){
 }
 
 // Başlangıçta yükle
-loadTpls();
+// ==== Dilekçe Şablonu: güvenli init ====
+document.addEventListener("DOMContentLoaded", () => {
+  // Elemanları burada yakala (artık DOM hazır)
+  const tplSelect   = document.getElementById("tplSelect");
+  const tplFields   = document.getElementById("tplFields");
+  const tplPreview  = document.getElementById("tplPreview");
+  const btnPreview  = document.getElementById("btnPreview");
+  const btnDocx     = document.getElementById("btnDocx");
+
+  if (!tplSelect) return; // kart sayfada yoksa çık
+
+  // Yardımcılar (senin fonksiyonlarını DOM içinden kullanacak şekilde sarıyoruz)
+  function buildTplFields(){
+    tplFields.innerHTML = "";
+    const opt  = tplSelect.options[tplSelect.selectedIndex];
+    const vars = JSON.parse(opt?.dataset?.vars || "[]");
+    if (vars.length === 0){
+      tplFields.innerHTML = <div class="out">Bu şablon değişken gerektirmiyor.</div>;
+      return;
+    }
+    vars.forEach(v=>{
+      tplFields.insertAdjacentHTML("beforeend", `
+        <label for="fld_${v}">${v}</label>
+        <input id="fld_${v}" placeholder="${v} değeri" />
+      `);
+    });
+  }
+
+  function collectTplData(){
+    const opt  = tplSelect.options[tplSelect.selectedIndex];
+    const vars = JSON.parse(opt?.dataset?.vars || "[]");
+    const obj  = {};
+    vars.forEach(v=>{
+      const el = document.getElementById(fld_${v});
+      obj[v] = (el?.value || "").trim();
+    });
+    return obj;
+  }
+
+  async function loadTpls(){
+    const r = await fetch(${API_BASE}/templates);
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const items = await r.json();
+    tplSelect.innerHTML = items.map(t =>
+      <option value="${t.code}" data-vars='${JSON.stringify(t.variables)}'>${t.title}</option>
+    ).join("");
+    buildTplFields();
+  }
+
+  tplSelect.addEventListener("change", buildTplFields);
+
+  btnPreview?.addEventListener("click", async ()=>{
+    try{
+      const code = tplSelect.value;
+      const data = collectTplData();
+      const r = await fetch(${API_BASE}/templates/render, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ code, data })
+      });
+      if (!r.ok) throw new Error("HTTP "+r.status);
+      const j = await r.json();
+      tplPreview.textContent = j.html || "";
+      if (typeof toast === "function") toast("Önizleme hazır ✅", "success");
+    }catch(e){
+      console.error(e);
+      if (typeof toast === "function") toast("Önizleme hatası ❌", "error");
+      alert("Önizleme hatası: "+e.message);
+    }
+  });
+
+  btnDocx?.addEventListener("click", async ()=>{
+    try{
+      const code = tplSelect.value;
+      const data = collectTplData();
+      const r = await fetch(${API_BASE}/templates/docx, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ code, data })
+      });
+      if (!r.ok) throw new Error("HTTP "+r.status);
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = ${code}.docx;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      if (typeof toast === "function") toast("DOCX indirildi ✅", "success");
+    }catch(e){
+      console.error(e);
+      if (typeof toast === "function") toast("DOCX oluşturulamadı ❌", "error");
+      alert("DOCX hatası: "+e.message);
+    }
+  });
+
+  // başlat
+  loadTpls().catch(e=>{
+    console.error(e);
+    alert("Şablonlar yüklenemedi. API adresi doğru mu?");
+  });
+});
