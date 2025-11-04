@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://yarginet-mvp-api.onrender.com";
 
 const reg = document.getElementById("reg");
 const login = document.getElementById("login");
