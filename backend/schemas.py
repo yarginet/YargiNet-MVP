@@ -42,10 +42,15 @@ class HearingOut(HearingIn):
 
 
 # --- Dilekçe Şablonu listesi için (TemplateOut) ---
+# en üstte:
+from typing import List
+
+# ...
 class TemplateOut(BaseModel):
     id: int
     code: str
     title: str
+    variables: List[str] = []   # <-- eklendi
 
 class RenderIn(BaseModel):
     template_id: int
