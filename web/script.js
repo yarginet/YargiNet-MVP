@@ -1,4 +1,107 @@
+/ ---- Sabitler ----
 const API_BASE = "https://yarginet-mvp-api.onrender.com";
+
+// ---- Yardımcılar ----
+function q(id){ return document.getElementById(id); }
+
+// ---- Dinamik alan üret ----
+function buildTplFields() {
+  const tplSelect = q("tplSelect");
+  const tplFields = q("tplFields");
+  tplFields.innerHTML = "";
+
+  const opt  = tplSelect.options[tplSelect.selectedIndex];
+  const vars = JSON.parse(opt?.dataset?.vars || "[]");
+
+  if (!vars.length) {
+    tplFields.innerHTML = <div class="out">Bu şablon değişken gerektirmiyor.</div>;
+    return;
+  }
+  vars.forEach(v=>{
+    tplFields.insertAdjacentHTML("beforeend", `
+      <label for="fld_${v}">${v}</label>
+      <input id="fld_${v}" placeholder="${v} değeri" />
+    `);
+  });
+}
+
+function collectTplData(){
+  const tplSelect = q("tplSelect");
+  const opt  = tplSelect.options[tplSelect.selectedIndex];
+  const vars = JSON.parse(opt?.dataset?.vars || "[]");
+  const obj  = {};
+  vars.forEach(v=>{
+    const el = q(fld_${v});
+    obj[v] = (el?.value || "").trim();
+  });
+  return obj;
+}
+
+// ---- Şablonları yükle ----
+async function loadTpls(){
+  const tplSelect = q("tplSelect");
+  const r = await fetch(${API_BASE}/templates);
+  if (!r.ok) throw new Error("HTTP "+r.status);
+  const items = await r.json();
+
+  // variables yoksa bile [] olarak set et
+  tplSelect.innerHTML = items.map(t =>
+    <option value="${t.code}" data-vars='${JSON.stringify(t.variables || [])}'>${t.title}</option>
+  ).join("");
+
+  buildTplFields();
+}
+
+// ---- Önizleme ----
+async function doPreview(){
+  const tplSelect  = q("tplSelect");
+  const tplPreview = q("tplPreview");
+
+  const code = tplSelect.value;
+  const data = collectTplData();
+
+  const r = await fetch(${API_BASE}/templates/render, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ code, data })
+  });
+  if (!r.ok) throw new Error("HTTP "+r.status);
+  const j = await r.json();
+  tplPreview.textContent = j.html || j.content || "(boş)";
+}
+
+// ---- DOCX indir ----
+async function doDocx(){
+  const tplSelect = q("tplSelect");
+  const code = tplSelect.value;
+  const data = collectTplData();
+
+  const r = await fetch(${API_BASE}/templates/docx, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ code, data })
+  });
+  if (!r.ok) throw new Error("HTTP "+r.status);
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = ${code}.docx;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ---- INIT ----
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("YargiNet JS yüklendi");
+  // event bağla
+  q("tplSelect").addEventListener("change", buildTplFields);
+  q("btnPreview").addEventListener("click", () => doPreview().catch(console.error));
+  q("btnDocx").addEventListener("click", () => doDocx().catch(console.error));
+
+  // yükle
+  try { await loadTpls(); }
+  catch(e){ console.error("Şablonlar yüklenemedi:", e); alert("Şablonlar yüklenemedi"); }
+});
 
 const reg = document.getElementById("reg");
 const login = document.getElementById("login");
