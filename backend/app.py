@@ -96,15 +96,15 @@ def list_templates(s: Session = Depends(get_s)):
     return [TemplateOut(id=r.id, code=r.code, title=r.title) for r in rows]
 
 # 1) Şablonları listele + ihtiyaç duyduğu alanları döndür
-@app.get("/templates")
-def list_templates():
-    with Session(engine) as s:
-        rows = s.exec(select(Template)).all()
-    return [
-        {"code": r.code, "title": r.title, "variables": extract_vars(r.body)}
-        for r in rows
-    ]
-
+@app.get("/templates", response_model=List[TemplateOut], tags=["dilekce"])
+def list_templates(s: Session = Depends(get_s)):
+    rows = s.exec(select(Template)).all()
+    out = []
+    for r in rows:
+        # {{degisken}} yakala
+        vars_ = re.findall(r"\{\{(\w+)\}\}", r.body or "")
+        out.append(TemplateOut(id=r.id, code=r.code, title=r.title, variables=vars_))
+    return out
 
 # 2) Önizleme: metni doldurup düz HTML/metin döndür
 @app.post("/templates/render")
