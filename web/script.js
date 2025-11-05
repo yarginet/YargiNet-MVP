@@ -53,10 +53,13 @@ const renderBtn = document.getElementById("renderBtn");
 const renderOut = document.getElementById("renderOut");
 
 tplBtn.onclick = async () => {
-  const r = await fetch(API_BASE + "/templates");
-  const data = await r.json();
-  tplSelect.innerHTML = data.map(d => `<option value="${d.id}">${d.code} - ${d.title}</option>`).join("");
-};
+ const r = await fetch(${API_BASE}/templates);
+const items = await r.json();
+tplSelect.innerHTML = items.map(t =>
+  <option value="${t.code}" data-vars='${JSON.stringify(t.variables || [])}'>${t.title}</option>
+).join("");
+buildTplFields(); const opt  = tplSelect.options[tplSelect.selectedIndex];
+const vars = JSON.parse(opt?.dataset?.vars || "[]");
 
 renderBtn.onclick = async () => {
   const payload = { template_id: parseInt(tplSelect.value), fields: {} };
