@@ -12,7 +12,7 @@ from docx import Document
 from pydantic import BaseModel
 
 from models import User, Tevkil, Template, Hearing
-from schemas import UserIn, UserOut, LoginIn, TevkilIn, TevkilOut, HearingIn
+from schemas import UserIn, UserOut, LoginIn, TevkilIn, TevkilOut, HearingIn, HearingOut
 from db import engine, init_db
 
 app = FastAPI(title="YargıNet MVP API", version="0.1.0")
