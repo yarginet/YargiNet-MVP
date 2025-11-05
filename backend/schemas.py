@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict
 from pydantic import BaseModel, EmailStr
-
+from datetime import date, time
 class UserIn(BaseModel):
     email: EmailStr
     password: str
