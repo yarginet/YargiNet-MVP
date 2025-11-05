@@ -121,3 +121,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
     alert("Şablonlar yüklenemedi. API adresi doğru mu?");
   });
 });
+<script src="script.js" defer></script>
